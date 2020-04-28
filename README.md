@@ -1,4 +1,4 @@
-# <img align="left" src="images/image-grinder.png">Cache Horizon:<br>Gradle build cache for a group of tasks
+# Cache Horizon:<br>Use gradle build cache for a group of tasks
 
 <!---freshmark shields
 output = [
@@ -26,23 +26,24 @@ output = [
 output = prefixDelimiterReplace(input, 'https://javadoc.io/static/com.diffplug.gradle/image-grinder/', '/', versionLast);
 -->
 
-## Cache a *group* of tasks
+## The problem
 
-Take the following task dependency trees:
+Take the following task trees:
 
 ```
-[install node] -> [npm install] -> [npm run complexJsBuild]
+[install node] -> [npm install] -+-> [npm run compileSass      ] + -> [npm run concatMinify]
+                                 +-> [npm run compileTypescript] +
+
 [start docker] -> [run command in docker] -> [stop docker]
 ```
 
-The important things about this are:
-
 - the **group** of tasks can easily be defined as `f(inputs) = output_files`
-- individually, they cannot be defined that way, because some steps modify the environment (rather than only generating output files)
-- if you could cache the **group**, then you could avoid not just executing a task, but installing and configuring an entire toolchain
-- task-level caching doesn't work - you can't cache "bringing up docker", even though you can easily cache `f(dockerfile, input_files) -> outputs`
+- but individually they can't, because some steps modify the environment
+    - you can't cache `start docker` ...
+- if you could somehow cache the **group**, then you could avoid not just a task, but an entire toolchain
+    - ...but you can easily cache `f(dockerfile, input_files) -> output_files`
 
-## How it works
+## A solution
 
 ```gradle
 plugins {
@@ -50,7 +51,7 @@ plugins {
 }
 
 cacheHorizon {
-    add 'nodeInstall', 'npmInstall', 'complexJsBuild'
+    add 'nodeInstall', 'npmInstall', 'compileSass', 'compileTypescript'
     inputsAndOutputs {
         inputs.property('nodeVersion', nodeTask.nodeVersion)
         inputs.file('package-lock.json').withPathSensitivity(PathSensitivity.RELATIVE)
@@ -68,11 +69,13 @@ cacheHorizonIsCached -> | nodeInstall, npmInstall, ... | -> cacheHorizon
                         +------------------------------+
 ```
 
-When `cacheHorizonIsCached` runs, it checks to see if `cacheHorizon` is able to be restored from cache.  If it is, then it disables `nodeInstall`, `npmInstall`, etc.  When `cacheHorizon` eventually runs, it will just restore `index.js` from cache, avoiding all the intermediate work.
+When `cacheHorizonIsCached` executes, it looks forward to check if `cacheHorizon` is able to be restored from cache.  If it is, then it disables `nodeInstall`, `npmInstall`, etc.  When `cacheHorizon` eventually runs, it will just restore `index.js` from cache, avoiding all the intermediate work.
 
-## Multiple horizons
+**DANGER** no outside task should depend on anything within the horizon (e.g. `test` dependsOn `compileTypescript` is bad, it should instead depend on `cacheHorizon`).  It is fine if tasks within the horizon depend on anything outside the horizon (e.g. `compileTypescript` dependsOn `lintTypescript` is fine).
 
-Usually there's probably just one `cacheHorizon` per project.  But if you want more, you can do
+## Multiple cache horizons in one project
+
+Usually you only need one `cacheHorizon` per project.  But if you want more, you can do this:
 
 ```gradle
 cacheHorizon {
@@ -82,13 +85,13 @@ cacheHorizon {
     }
 ```
 
-Now you'll have `dockerHorizon` and `dockerHorizonIsCached` tasks in your tree.
+Now you'll have `dockerHorizon` and `dockerHorizonIsCached` tasks.
 
-## Limitations
+## Limitations 🔴This project has not been implemented🔴
 
-It doesn't work, but we think it could.  See [here](TODO) for its current status and to help if you can.
+We started to implement it, got stuck, and found an easier way around.  We're publishing what we did in case it helps you get to the finish line.  See [this issue](TODO) for the latest on our progress.  If somebody builds something else which solves this problem we'll link out from there.
 
-It will definitely require using Gradle's internal API, so there will be compatibility delays (e.g. when Gradle N comes out, it might be a little while until `cache-horizon` has been tested and fixed for that version).
+Cache horizon uses Gradle's internal API, so there will be compatibility delays (e.g. when Gradle N comes out, it might be a little while until `cache-horizon` has been tested and fixed for the new version).
 
 <!---freshmark /javadoc -->
 
