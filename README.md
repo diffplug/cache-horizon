@@ -89,7 +89,7 @@ Now you'll have `dockerHorizon` and `dockerHorizonIsCached` tasks.
 
 ## Limitations 🔴This project has not been implemented🔴
 
-We started to implement it, got stuck, and found an easier way around.  We're publishing what we did in case it helps you get to the finish line.  See [this issue](TODO) for the latest on our progress.  If somebody builds something else which solves this problem we'll link out from there.
+We started to implement it, got stuck, and found an easier way around.  We're publishing what we did in case it helps you get to the finish line.  See [this issue](https://github.com/diffplug/cache-horizon/issues/1) for the latest on our progress.  If somebody builds something else which solves this problem we'll link out from there.
 
 Cache horizon uses Gradle's internal API, so there will be compatibility delays (e.g. when Gradle N comes out, it might be a little while until `cache-horizon` has been tested and fixed for the new version).
 
