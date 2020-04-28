@@ -3,6 +3,10 @@ plugins {
 	id 'com.diffplug.spotless-changelog'
 }
 
+spotlessChangelog {
+	forceNextVersion '0.0.1-HELPWANTED'
+}
+
 repositories {
 	jcenter()
 }
