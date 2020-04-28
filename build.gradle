@@ -7,11 +7,6 @@ repositories {
 	jcenter()
 }
 
-spotlessChangelog {
-	changelogFile 'CHANGES.md'
-	tagPrefix 'versions/'
-	ifFoundBumpAdded '### Added', '### Changed'
-}
 apply from: 干.file('base/changelog.gradle')
 apply from: 干.file('spotless/freshmark.gradle')
 
